@@ -1,10 +1,14 @@
 package br.com.farmalog.produto;
 
+import br.com.farmalog.produto.dto.ProdutoFiltro;
 import br.com.farmalog.produto.dto.ProdutoRequest;
 import br.com.farmalog.produto.dto.ProdutoResponse;
 import br.com.farmalog.produto.entity.Produto;
 import br.com.farmalog.shared.exception.RecursoDuplicadoException;
 import br.com.farmalog.shared.exception.RecursoNaoEncontradoException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +31,12 @@ public class ProdutoService {
 		Produto produto = new Produto(req.nome(), req.principioAtivo(), req.fabricante(),
 				req.codigoBarras(), req.precoVenda(), req.exigencia(), req.estoqueMinimo());
 		return ProdutoResponse.from(repository.save(produto));
+	}
+
+	public PagedModel<ProdutoResponse> listar(ProdutoFiltro filtro, Pageable pageable) {
+		Page<ProdutoResponse> pagina = repository.findAll(ProdutoSpecs.comFiltro(filtro), pageable)
+				.map(ProdutoResponse::from);
+		return new PagedModel<>(pagina);
 	}
 
 	public ProdutoResponse buscarPorId(Long id) {

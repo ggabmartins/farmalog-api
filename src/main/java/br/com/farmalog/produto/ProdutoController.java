@@ -1,8 +1,12 @@
 package br.com.farmalog.produto;
 
+import br.com.farmalog.produto.dto.ProdutoFiltro;
 import br.com.farmalog.produto.dto.ProdutoRequest;
 import br.com.farmalog.produto.dto.ProdutoResponse;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,6 +38,12 @@ class ProdutoController {
 		ProdutoResponse produto = service.criar(req);
 		URI location = uriBuilder.path("/api/v1/produtos/{id}").buildAndExpand(produto.id()).toUri();
 		return ResponseEntity.created(location).body(produto);
+	}
+
+	@GetMapping
+	PagedModel<ProdutoResponse> listar(ProdutoFiltro filtro,
+			@PageableDefault(sort = "nome") Pageable pageable) {
+		return service.listar(filtro, pageable);
 	}
 
 	@GetMapping("/{id}")
