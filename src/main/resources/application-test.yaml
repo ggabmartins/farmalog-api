@@ -1,0 +1,8 @@
+# O datasource vem do PostgreSQLContainer via @ServiceConnection
+# (TestcontainersConfiguration). O modulo docker-compose fica desligado nos testes.
+spring:
+  docker:
+    compose:
+      enabled: false
+  jpa:
+    show-sql: false

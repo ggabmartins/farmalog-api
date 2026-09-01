@@ -1,0 +1,11 @@
+# Sem valores padrao: se qualquer variavel faltar, a aplicacao nao sobe.
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  docker:
+    compose:
+      enabled: false
+  jpa:
+    show-sql: false
