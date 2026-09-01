@@ -1,8 +1,12 @@
-# O datasource vem do PostgreSQLContainer via @ServiceConnection
-# (TestcontainersConfiguration). O modulo docker-compose fica desligado nos testes.
+# O Postgres dos testes sobe pelo mesmo compose.yaml do dev, via
+# spring-boot-docker-compose. Sem datasource explicito e sem credencial no codigo:
+# o modulo le a conexao do container. Requer Docker (docker compose) disponivel.
 spring:
   docker:
     compose:
-      enabled: false
+      enabled: true
+      skip:
+        in-tests: false
+      lifecycle-management: start-and-stop
   jpa:
     show-sql: false
