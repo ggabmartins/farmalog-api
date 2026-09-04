@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,6 +55,7 @@ public class ProdutoController {
 	}
 
 	@PostMapping
+	@PreAuthorize("hasRole('GERENTE')")
 	@Operation(summary = "Cria um novo produto")
 	@ApiResponses({
 			@ApiResponse(responseCode = "201", description = "Produto criado"),
@@ -68,6 +70,7 @@ public class ProdutoController {
 	}
 
 	@PutMapping("/{id}")
+	@PreAuthorize("hasRole('GERENTE')")
 	@Operation(summary = "Atualiza um produto existente")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", description = "Produto atualizado"),
@@ -80,6 +83,7 @@ public class ProdutoController {
 	}
 
 	@DeleteMapping("/{id}")
+	@PreAuthorize("hasRole('GERENTE')")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@Operation(summary = "Desativa um produto (remoção lógica)")
 	@ApiResponses({

@@ -73,13 +73,13 @@ sobe em container, sem senha no código.
 | Persistência | Spring Data JPA / Hibernate |
 | Banco | PostgreSQL 17 |
 | Migrations | Flyway |
+| Segurança | Spring Security + OAuth2 Resource Server (JWT RS256) |
 | Documentação | springdoc-openapi (Swagger UI) |
 | Build | Maven |
 | Testes | JUnit 5, Mockito, Spring Boot Test |
 | Infra local | Docker Compose |
 
-Planejado para as próximas fases: Spring Security com OAuth2 Resource Server (JWT
-assinado com chaves RSA) e pipeline no GitHub Actions.
+Planejado para as próximas fases: pipeline no GitHub Actions e deploy.
 
 ---
 
@@ -105,6 +105,17 @@ A aplicação sobe o container do PostgreSQL automaticamente (via
 `http://localhost:8080`. A documentação interativa fica em
 `http://localhost:8080/swagger-ui.html`.
 
+As chaves RSA que assinam os JWT ficam fora do versionamento. Gere-as antes de
+subir a aplicação:
+
+```bash
+bash scripts/gen-keys.sh
+```
+
+A migration cria três usuários de demonstração (senha `farmalog123`):
+`gerente@farmalog.dev`, `farmaceutico@farmalog.dev` e `atendente@farmalog.dev`.
+Autentique em `POST /auth/login` e envie o token no header `Authorization: Bearer`.
+
 ### Testes
 
 ```bash
@@ -120,13 +131,16 @@ em execução.
 
 Implementados até aqui:
 
-| Método | Rota | Descrição |
-|---|---|---|
-| `POST` | `/api/v1/produtos` | Cadastra um produto |
-| `GET` | `/api/v1/produtos` | Lista produtos — paginado, com filtros por nome, princípio ativo, exigência e ativo |
-| `GET` | `/api/v1/produtos/{id}` | Busca um produto por ID |
-| `PUT` | `/api/v1/produtos/{id}` | Atualiza um produto |
-| `DELETE` | `/api/v1/produtos/{id}` | Desativa um produto (exclusão lógica) |
+| Método | Rota | Acesso | Descrição |
+|---|---|---|---|
+| `POST` | `/auth/login` | público | Autentica por email e senha, devolve um JWT |
+| `GET` | `/auth/me` | autenticado | Email e perfil do usuário do token |
+| `GET` | `/api/v1/produtos` | autenticado | Lista produtos — paginado, com filtros por nome, princípio ativo, exigência e ativo |
+| `GET` | `/api/v1/produtos/{id}` | autenticado | Busca um produto por ID |
+| `POST` | `/api/v1/produtos` | GERENTE | Cadastra um produto |
+| `PUT` | `/api/v1/produtos/{id}` | GERENTE | Atualiza um produto |
+| `DELETE` | `/api/v1/produtos/{id}` | GERENTE | Desativa um produto (exclusão lógica) |
+| `GET` `POST` `PUT` `DELETE` | `/api/v1/usuarios` | GERENTE | CRUD de usuários |
 
 **Exemplo — cadastro de produto**
 
@@ -158,9 +172,9 @@ liberação por farmacêutico.
       listagem paginada com filtros, tratamento centralizado de erro e
       documentação OpenAPI.
 
-- [ ] **Fase 2 — Segurança**
-      Usuários no banco, BCrypt, JWT assinado com par de chaves RSA e autorização
-      por perfil (atendente, farmacêutico, gerente).
+- [x] **Fase 2 — Segurança**
+      Usuários no banco, BCrypt, JWT assinado com par de chaves RSA, login e
+      autorização por perfil (atendente, farmacêutico, gerente).
 
 - [ ] **Fase 3 — Estoque**
       Entrada de lote, movimentação como registro imutável, cálculo de
