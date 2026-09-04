@@ -32,6 +32,10 @@ class ProdutoIntegrationTest {
 		return jwt().authorities(new SimpleGrantedAuthority("ROLE_GERENTE"));
 	}
 
+	private static RequestPostProcessor atendente() {
+		return jwt().authorities(new SimpleGrantedAuthority("ROLE_ATENDENTE"));
+	}
+
 	private static final String CORPO = """
 			{
 			  "nome": "Amoxicilina 500mg",
@@ -71,6 +75,22 @@ class ProdutoIntegrationTest {
 		mockMvc.perform(get("/api/v1/produtos").with(gerente()).param("nome", "amoxicilina"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.content").isEmpty());
+	}
+
+	@Test
+	void atendente_podeConsultar_masNaoCadastrar() throws Exception {
+		mockMvc.perform(get("/api/v1/produtos").with(atendente()))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(post("/api/v1/produtos").with(atendente())
+						.contentType(MediaType.APPLICATION_JSON).content(CORPO))
+				.andExpect(status().isForbidden());
+	}
+
+	@Test
+	void semToken_retorna401() throws Exception {
+		mockMvc.perform(get("/api/v1/produtos"))
+				.andExpect(status().isUnauthorized());
 	}
 
 	@Test
