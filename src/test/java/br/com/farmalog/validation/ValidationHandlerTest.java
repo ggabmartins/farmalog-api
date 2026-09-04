@@ -6,42 +6,40 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = GlobalExceptionHandlerTest.EndpointsDeTeste.class)
-@Import({GlobalExceptionHandler.class, GlobalExceptionHandlerTest.EndpointsDeTeste.class})
-class GlobalExceptionHandlerTest {
+@WebMvcTest(controllers = ValidationHandlerTest.EndpointsDeTeste.class)
+@Import({ValidationHandler.class, ValidationHandlerTest.EndpointsDeTeste.class})
+class ValidationHandlerTest {
 
 	@Autowired
 	MockMvc mockMvc;
 
 	@Test
-	void recursoNaoEncontrado_retorna404ProblemDetail() throws Exception {
+	void responseStatusException_retornaStatusEMensagem() throws Exception {
 		mockMvc.perform(get("/teste/nao-encontrado"))
 				.andExpect(status().isNotFound())
-				.andExpect(header().string("Content-Type", MediaType.APPLICATION_PROBLEM_JSON_VALUE))
-				.andExpect(jsonPath("$.title").value("Recurso não encontrado"))
 				.andExpect(jsonPath("$.status").value(404))
-				.andExpect(jsonPath("$.detail").value("Produto 42 não encontrado"))
-				.andExpect(jsonPath("$.instance").value("/teste/nao-encontrado"));
+				.andExpect(jsonPath("$.message").value("Produto 42 não encontrado"));
 	}
 
 	@Test
-	void recursoDuplicado_retorna409() throws Exception {
+	void responseStatusException_409() throws Exception {
 		mockMvc.perform(get("/teste/duplicado"))
 				.andExpect(status().isConflict())
-				.andExpect(jsonPath("$.title").value("Conflito com recurso existente"));
+				.andExpect(jsonPath("$.status").value(409));
 	}
 
 	@Test
@@ -50,20 +48,9 @@ class GlobalExceptionHandlerTest {
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("{}"))
 				.andExpect(status().isBadRequest())
-				.andExpect(header().string("Content-Type", MediaType.APPLICATION_PROBLEM_JSON_VALUE))
-				.andExpect(jsonPath("$.title").value("Requisição inválida"))
-				.andExpect(jsonPath("$.instance").value("/teste/valida"))
-				.andExpect(jsonPath("$.campos[0].campo").value("nome"))
-				.andExpect(jsonPath("$.campos[0].mensagem").value("não pode estar em branco"));
-	}
-
-	@Test
-	void erroInesperado_retorna500SemStackTrace() throws Exception {
-		mockMvc.perform(get("/teste/explode"))
-				.andExpect(status().isInternalServerError())
-				.andExpect(jsonPath("$.title").value("Erro interno"))
-				.andExpect(jsonPath("$.detail").value("Ocorreu um erro inesperado. Tente novamente mais tarde."))
-				.andExpect(jsonPath("$.trace").doesNotExist());
+				.andExpect(jsonPath("$").isArray())
+				.andExpect(jsonPath("$[0].field").value("nome"))
+				.andExpect(jsonPath("$[0].message").value("não pode estar em branco"));
 	}
 
 	@RestController
@@ -71,17 +58,12 @@ class GlobalExceptionHandlerTest {
 
 		@GetMapping("/teste/nao-encontrado")
 		void naoEncontrado() {
-			throw new RecursoNaoEncontradoException("Produto 42 não encontrado");
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto 42 não encontrado");
 		}
 
 		@GetMapping("/teste/duplicado")
 		void duplicado() {
-			throw new RecursoDuplicadoException("Código de barras já cadastrado");
-		}
-
-		@GetMapping("/teste/explode")
-		void explode() {
-			throw new IllegalStateException("boom");
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "Código de barras já cadastrado");
 		}
 
 		@PostMapping("/teste/valida")

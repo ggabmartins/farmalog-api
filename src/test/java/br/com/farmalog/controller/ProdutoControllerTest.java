@@ -3,7 +3,7 @@ package br.com.farmalog.controller;
 import br.com.farmalog.dto.ProdutoResponse;
 import br.com.farmalog.entity.ExigenciaReceita;
 import br.com.farmalog.service.ProdutoService;
-import br.com.farmalog.validation.GlobalExceptionHandler;
+import br.com.farmalog.validation.ValidationHandler;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ProdutoController.class)
-@Import(GlobalExceptionHandler.class)
+@Import(ValidationHandler.class)
 class ProdutoControllerTest {
 
 	@Autowired
@@ -33,13 +33,14 @@ class ProdutoControllerTest {
 	ProdutoService service;
 
 	@Test
-	void criar_comCorpoInvalido_retorna400ComCampos() throws Exception {
+	void criar_comCorpoInvalido_retorna400ComListaDeCampos() throws Exception {
 		mockMvc.perform(post("/api/v1/produtos")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("{}"))
 				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.title").value("Requisição inválida"))
-				.andExpect(jsonPath("$.campos").isArray());
+				.andExpect(jsonPath("$").isArray())
+				.andExpect(jsonPath("$[0].field").exists())
+				.andExpect(jsonPath("$[0].message").exists());
 	}
 
 	@Test

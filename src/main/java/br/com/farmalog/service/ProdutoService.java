@@ -5,14 +5,13 @@ import br.com.farmalog.dto.ProdutoRequest;
 import br.com.farmalog.dto.ProdutoResponse;
 import br.com.farmalog.entity.Produto;
 import br.com.farmalog.repository.ProdutoRepository;
-import br.com.farmalog.repository.ProdutoSpecs;
-import br.com.farmalog.validation.RecursoDuplicadoException;
-import br.com.farmalog.validation.RecursoNaoEncontradoException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @Transactional(readOnly = true)
@@ -27,7 +26,7 @@ public class ProdutoService {
 	@Transactional
 	public ProdutoResponse criar(ProdutoRequest req) {
 		if (repository.existsByCodigoBarras(req.codigoBarras())) {
-			throw new RecursoDuplicadoException(
+			throw new ResponseStatusException(HttpStatus.CONFLICT,
 					"Já existe produto com o código de barras " + req.codigoBarras());
 		}
 		Produto produto = Produto.builder()
@@ -44,7 +43,9 @@ public class ProdutoService {
 	}
 
 	public PagedModel<ProdutoResponse> listar(ProdutoFiltro filtro, Pageable pageable) {
-		Page<ProdutoResponse> pagina = repository.findAll(ProdutoSpecs.comFiltro(filtro), pageable)
+		boolean ativo = filtro.ativo() == null || filtro.ativo();
+		Page<ProdutoResponse> pagina = repository
+				.buscar(filtro.nome(), filtro.principioAtivo(), filtro.exigencia(), ativo, pageable)
 				.map(ProdutoResponse::from);
 		return new PagedModel<>(pagina);
 	}
@@ -57,7 +58,7 @@ public class ProdutoService {
 	public ProdutoResponse atualizar(Long id, ProdutoRequest req) {
 		Produto produto = buscarEntidade(id);
 		if (repository.existsByCodigoBarrasAndIdNot(req.codigoBarras(), id)) {
-			throw new RecursoDuplicadoException(
+			throw new ResponseStatusException(HttpStatus.CONFLICT,
 					"Já existe produto com o código de barras " + req.codigoBarras());
 		}
 		produto.setNome(req.nome());
@@ -77,6 +78,7 @@ public class ProdutoService {
 
 	private Produto buscarEntidade(Long id) {
 		return repository.findById(id)
-				.orElseThrow(() -> new RecursoNaoEncontradoException("Produto " + id + " não encontrado"));
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+						"Produto " + id + " não encontrado"));
 	}
 }

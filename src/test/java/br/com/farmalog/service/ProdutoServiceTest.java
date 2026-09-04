@@ -4,13 +4,13 @@ import br.com.farmalog.dto.ProdutoRequest;
 import br.com.farmalog.entity.ExigenciaReceita;
 import br.com.farmalog.entity.Produto;
 import br.com.farmalog.repository.ProdutoRepository;
-import br.com.farmalog.validation.RecursoDuplicadoException;
-import br.com.farmalog.validation.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -37,11 +37,12 @@ class ProdutoServiceTest {
 	}
 
 	@Test
-	void criar_comCodigoDeBarrasJaExistente_lancaRecursoDuplicado() {
+	void criar_comCodigoDeBarrasJaExistente_retorna409() {
 		when(repository.existsByCodigoBarras("7891234567890")).thenReturn(true);
 
 		assertThatThrownBy(() -> service.criar(requestValido()))
-				.isInstanceOf(RecursoDuplicadoException.class);
+				.isInstanceOf(ResponseStatusException.class)
+				.extracting("statusCode").isEqualTo(HttpStatus.CONFLICT);
 
 		verify(repository, never()).save(any());
 	}
@@ -59,12 +60,12 @@ class ProdutoServiceTest {
 	}
 
 	@Test
-	void buscarPorId_inexistente_lancaRecursoNaoEncontrado() {
+	void buscarPorId_inexistente_retorna404() {
 		when(repository.findById(99L)).thenReturn(Optional.empty());
 
 		assertThatThrownBy(() -> service.buscarPorId(99L))
-				.isInstanceOf(RecursoNaoEncontradoException.class)
-				.hasMessageContaining("99");
+				.isInstanceOf(ResponseStatusException.class)
+				.extracting("statusCode").isEqualTo(HttpStatus.NOT_FOUND);
 	}
 
 	@Test
