@@ -5,6 +5,7 @@ import br.com.farmalog.dto.ProdutoRequest;
 import br.com.farmalog.dto.ProdutoResponse;
 import br.com.farmalog.entity.Produto;
 import br.com.farmalog.repository.ProdutoRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -13,14 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ProdutoService {
 
 	private final ProdutoRepository repository;
-
-	ProdutoService(ProdutoRepository repository) {
-		this.repository = repository;
-	}
 
 	@Transactional
 	public ProdutoResponse criar(ProdutoRequest req) {
