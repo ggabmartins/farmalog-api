@@ -1,7 +1,7 @@
-package br.com.farmalog.produto.dto;
+package br.com.farmalog.dto;
 
-import br.com.farmalog.produto.entity.ExigenciaReceita;
-import br.com.farmalog.produto.entity.Produto;
+import br.com.farmalog.entity.ExigenciaReceita;
+import br.com.farmalog.entity.Produto;
 
 import java.math.BigDecimal;
 

@@ -1,6 +1,6 @@
-package br.com.farmalog.produto.dto;
+package br.com.farmalog.dto;
 
-import br.com.farmalog.produto.entity.ExigenciaReceita;
+import br.com.farmalog.entity.ExigenciaReceita;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

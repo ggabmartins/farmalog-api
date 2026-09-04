@@ -1,4 +1,4 @@
-package br.com.farmalog.produto.entity;
+package br.com.farmalog.entity;
 
 public enum ExigenciaReceita {
 	ISENTO,

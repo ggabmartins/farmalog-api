@@ -1,10 +1,11 @@
-package br.com.farmalog.produto;
+package br.com.farmalog.service;
 
-import br.com.farmalog.produto.dto.ProdutoRequest;
-import br.com.farmalog.produto.entity.ExigenciaReceita;
-import br.com.farmalog.produto.entity.Produto;
-import br.com.farmalog.shared.exception.RecursoDuplicadoException;
-import br.com.farmalog.shared.exception.RecursoNaoEncontradoException;
+import br.com.farmalog.dto.ProdutoRequest;
+import br.com.farmalog.entity.ExigenciaReceita;
+import br.com.farmalog.entity.Produto;
+import br.com.farmalog.repository.ProdutoRepository;
+import br.com.farmalog.validation.RecursoDuplicadoException;
+import br.com.farmalog.validation.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

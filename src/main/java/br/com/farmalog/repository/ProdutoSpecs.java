@@ -1,16 +1,16 @@
-package br.com.farmalog.produto;
+package br.com.farmalog.repository;
 
-import br.com.farmalog.produto.dto.ProdutoFiltro;
-import br.com.farmalog.produto.entity.ExigenciaReceita;
-import br.com.farmalog.produto.entity.Produto;
+import br.com.farmalog.dto.ProdutoFiltro;
+import br.com.farmalog.entity.ExigenciaReceita;
+import br.com.farmalog.entity.Produto;
 import org.springframework.data.jpa.domain.Specification;
 
-final class ProdutoSpecs {
+public final class ProdutoSpecs {
 
 	private ProdutoSpecs() {
 	}
 
-	static Specification<Produto> comFiltro(ProdutoFiltro filtro) {
+	public static Specification<Produto> comFiltro(ProdutoFiltro filtro) {
 		boolean ativo = filtro.ativo() == null || filtro.ativo();
 		return Specification.allOf(
 				nomeContem(filtro.nome()),

@@ -1,10 +1,10 @@
-package br.com.farmalog.produto;
+package br.com.farmalog.repository;
 
-import br.com.farmalog.produto.entity.Produto;
+import br.com.farmalog.entity.Produto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-interface ProdutoRepository extends JpaRepository<Produto, Long>, JpaSpecificationExecutor<Produto> {
+public interface ProdutoRepository extends JpaRepository<Produto, Long>, JpaSpecificationExecutor<Produto> {
 
 	boolean existsByCodigoBarras(String codigoBarras);
 

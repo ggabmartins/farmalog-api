@@ -1,11 +1,13 @@
-package br.com.farmalog.produto;
+package br.com.farmalog.service;
 
-import br.com.farmalog.produto.dto.ProdutoFiltro;
-import br.com.farmalog.produto.dto.ProdutoRequest;
-import br.com.farmalog.produto.dto.ProdutoResponse;
-import br.com.farmalog.produto.entity.Produto;
-import br.com.farmalog.shared.exception.RecursoDuplicadoException;
-import br.com.farmalog.shared.exception.RecursoNaoEncontradoException;
+import br.com.farmalog.dto.ProdutoFiltro;
+import br.com.farmalog.dto.ProdutoRequest;
+import br.com.farmalog.dto.ProdutoResponse;
+import br.com.farmalog.entity.Produto;
+import br.com.farmalog.repository.ProdutoRepository;
+import br.com.farmalog.repository.ProdutoSpecs;
+import br.com.farmalog.validation.RecursoDuplicadoException;
+import br.com.farmalog.validation.RecursoNaoEncontradoException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
@@ -28,8 +30,16 @@ public class ProdutoService {
 			throw new RecursoDuplicadoException(
 					"Já existe produto com o código de barras " + req.codigoBarras());
 		}
-		Produto produto = new Produto(req.nome(), req.principioAtivo(), req.fabricante(),
-				req.codigoBarras(), req.precoVenda(), req.exigencia(), req.estoqueMinimo());
+		Produto produto = Produto.builder()
+				.nome(req.nome())
+				.principioAtivo(req.principioAtivo())
+				.fabricante(req.fabricante())
+				.codigoBarras(req.codigoBarras())
+				.precoVenda(req.precoVenda())
+				.exigencia(req.exigencia())
+				.estoqueMinimo(req.estoqueMinimo())
+				.ativo(true)
+				.build();
 		return ProdutoResponse.from(repository.save(produto));
 	}
 
@@ -50,8 +60,13 @@ public class ProdutoService {
 			throw new RecursoDuplicadoException(
 					"Já existe produto com o código de barras " + req.codigoBarras());
 		}
-		produto.atualizar(req.nome(), req.principioAtivo(), req.fabricante(),
-				req.codigoBarras(), req.precoVenda(), req.exigencia(), req.estoqueMinimo());
+		produto.setNome(req.nome());
+		produto.setPrincipioAtivo(req.principioAtivo());
+		produto.setFabricante(req.fabricante());
+		produto.setCodigoBarras(req.codigoBarras());
+		produto.setPrecoVenda(req.precoVenda());
+		produto.setExigencia(req.exigencia());
+		produto.setEstoqueMinimo(req.estoqueMinimo());
 		return ProdutoResponse.from(produto);
 	}
 

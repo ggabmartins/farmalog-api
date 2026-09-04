@@ -1,4 +1,4 @@
-package br.com.farmalog.produto.entity;
+package br.com.farmalog.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,13 +8,19 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
 @Entity
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "produto")
-@Getter
 public class Produto {
 
 	@Id
@@ -45,50 +51,4 @@ public class Produto {
 
 	@Column(nullable = false)
 	private boolean ativo;
-
-	protected Produto() {
-	}
-
-	public Produto(String nome, String principioAtivo, String fabricante, String codigoBarras,
-			BigDecimal precoVenda, ExigenciaReceita exigencia, Integer estoqueMinimo) {
-		this.nome = nome;
-		this.principioAtivo = principioAtivo;
-		this.fabricante = fabricante;
-		this.codigoBarras = codigoBarras;
-		this.precoVenda = precoVenda;
-		this.exigencia = exigencia;
-		this.estoqueMinimo = estoqueMinimo;
-		this.ativo = true;
-	}
-
-	public void atualizar(String nome, String principioAtivo, String fabricante, String codigoBarras,
-			BigDecimal precoVenda, ExigenciaReceita exigencia, Integer estoqueMinimo) {
-		this.nome = nome;
-		this.principioAtivo = principioAtivo;
-		this.fabricante = fabricante;
-		this.codigoBarras = codigoBarras;
-		this.precoVenda = precoVenda;
-		this.exigencia = exigencia;
-		this.estoqueMinimo = estoqueMinimo;
-	}
-
-	public void desativar() {
-		this.ativo = false;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (!(o instanceof Produto outro)) {
-			return false;
-		}
-		return id != null && id.equals(outro.id);
-	}
-
-	@Override
-	public int hashCode() {
-		return Produto.class.hashCode();
-	}
 }

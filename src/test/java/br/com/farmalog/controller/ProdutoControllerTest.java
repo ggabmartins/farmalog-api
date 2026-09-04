@@ -1,8 +1,9 @@
-package br.com.farmalog.produto;
+package br.com.farmalog.controller;
 
-import br.com.farmalog.produto.dto.ProdutoResponse;
-import br.com.farmalog.produto.entity.ExigenciaReceita;
-import br.com.farmalog.shared.exception.GlobalExceptionHandler;
+import br.com.farmalog.dto.ProdutoResponse;
+import br.com.farmalog.entity.ExigenciaReceita;
+import br.com.farmalog.service.ProdutoService;
+import br.com.farmalog.validation.GlobalExceptionHandler;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;

@@ -1,4 +1,4 @@
-package br.com.farmalog.produto;
+package br.com.farmalog.controller;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

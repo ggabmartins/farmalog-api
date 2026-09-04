@@ -1,4 +1,4 @@
-package br.com.farmalog.shared.exception;
+package br.com.farmalog.validation;
 
 public class RecursoDuplicadoException extends RuntimeException {
 

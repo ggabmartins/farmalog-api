@@ -1,8 +1,9 @@
-package br.com.farmalog.produto;
+package br.com.farmalog.controller;
 
-import br.com.farmalog.produto.dto.ProdutoFiltro;
-import br.com.farmalog.produto.dto.ProdutoRequest;
-import br.com.farmalog.produto.dto.ProdutoResponse;
+import br.com.farmalog.dto.ProdutoFiltro;
+import br.com.farmalog.service.ProdutoService;
+import br.com.farmalog.dto.ProdutoRequest;
+import br.com.farmalog.dto.ProdutoResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -24,7 +25,7 @@ import java.net.URI;
 
 @RestController
 @RequestMapping("/api/v1/produtos")
-class ProdutoController {
+public class ProdutoController {
 
 	private final ProdutoService service;
 
