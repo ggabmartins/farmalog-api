@@ -4,7 +4,7 @@ API REST para gestão de estoque, controle de validade e vendas em farmácias
 independentes.
 
 ![Java](https://img.shields.io/badge/Java-21-orange)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.5-6DB33F)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-6DB33F)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-336791)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
@@ -42,20 +42,25 @@ número solto.
 **Baixa por FEFO.** A venda consome primeiro o lote que vence antes, ignorando os
 vencidos. É o comportamento correto do negócio e evita perda por validade.
 
-**Pacote por feature.** O código é organizado por domínio (`produto`, `lote`, `venda`),
-não por camada técnica. Cada feature carrega seu controller, service, repository,
-entidade e DTOs. Isso mantém junto o que muda junto.
+**Organização por camada.** O código é dividido em `controller`, `service`,
+`repository`, `entity` e `dto` — cada tipo de responsabilidade no seu pacote, com o
+tratamento de erro isolado em `validation`.
 
-**Entidade nunca sai do service.** Controllers trabalham exclusivamente com DTOs —
-`records` separados para entrada, saída e filtro. A entidade JPA não aparece em nenhuma
-assinatura pública.
+**Entidade não aparece no controller.** Os endpoints trabalham exclusivamente com
+DTOs — `records` separados para entrada, saída e filtro. O mapeamento entre DTO e
+entidade fica nos próprios DTOs (`toEntity` / `fromEntity`).
+
+**Erro tratado num ponto só.** Um `@RestControllerAdvice` traduz falha de validação e
+de negócio para respostas JSON previsíveis: `{ status, message }` para regra de
+negócio, lista de `{ field, message }` para validação. Nenhum stack trace vaza.
 
 **Schema versionado com Flyway.** `ddl-auto` está em `validate`. O schema é definido em
 migrations versionadas, nunca inferido pelo Hibernate — o banco é reproduzível em
 qualquer máquina a partir do repositório.
 
-**Nenhuma credencial versionada.** A configuração vem de variáveis de ambiente. O
-repositório traz apenas um `.env.example` com valores fictícios.
+**Nenhuma credencial versionada.** A configuração vem de variáveis de ambiente; o
+repositório traz apenas um `.env.example` com valores fictícios. O banco de testes
+sobe em container, sem senha no código.
 
 ---
 
@@ -64,16 +69,17 @@ repositório traz apenas um `.env.example` com valores fictícios.
 | Camada | Tecnologia |
 |---|---|
 | Linguagem | Java 21 |
-| Framework | Spring Boot 3.4.5 |
+| Framework | Spring Boot 4.1 |
 | Persistência | Spring Data JPA / Hibernate |
 | Banco | PostgreSQL 17 |
 | Migrations | Flyway |
+| Documentação | springdoc-openapi (Swagger UI) |
 | Build | Maven |
 | Testes | JUnit 5, Mockito, Spring Boot Test |
 | Infra local | Docker Compose |
 
-Planejado para as próximas fases: Spring Security com OAuth2 Resource Server (JWT),
-springdoc-openapi, Testcontainers e GitHub Actions.
+Planejado para as próximas fases: Spring Security com OAuth2 Resource Server (JWT
+assinado com chaves RSA) e pipeline no GitHub Actions.
 
 ---
 
@@ -90,15 +96,14 @@ springdoc-openapi, Testcontainers e GitHub Actions.
 # 1. Configure as variáveis de ambiente
 cp .env.example .env
 
-# 2. Suba o PostgreSQL
-docker compose up -d
-
-# 3. Rode a aplicação
+# 2. Rode a aplicação
 ./mvnw spring-boot:run
 ```
 
-A API sobe em `http://localhost:8080`. O Flyway aplica as migrations automaticamente
-na inicialização.
+A aplicação sobe o container do PostgreSQL automaticamente (via
+`spring-boot-docker-compose`), aplica as migrations do Flyway e fica disponível em
+`http://localhost:8080`. A documentação interativa fica em
+`http://localhost:8080/swagger-ui.html`.
 
 ### Testes
 
@@ -106,13 +111,8 @@ na inicialização.
 ./mvnw test
 ```
 
-### Perfis
-
-| Perfil | Uso |
-|---|---|
-| `dev` | Desenvolvimento local (padrão) |
-| `test` | Execução dos testes |
-| `prod` | Produção — exige todas as variáveis, sem valores padrão |
+Os testes de integração sobem um PostgreSQL em container; o Docker precisa estar
+em execução.
 
 ---
 
@@ -123,13 +123,10 @@ Implementados até aqui:
 | Método | Rota | Descrição |
 |---|---|---|
 | `POST` | `/api/v1/produtos` | Cadastra um produto |
-| `GET` | `/api/v1/produtos` | Lista produtos — paginado, com filtros |
+| `GET` | `/api/v1/produtos` | Lista produtos — paginado, com filtros por nome, princípio ativo, exigência e ativo |
 | `GET` | `/api/v1/produtos/{id}` | Busca um produto por ID |
 | `PUT` | `/api/v1/produtos/{id}` | Atualiza um produto |
 | `DELETE` | `/api/v1/produtos/{id}` | Desativa um produto (exclusão lógica) |
-
-Erros são devolvidos no formato `ProblemDetail` (RFC 7807), com tratamento
-centralizado.
 
 **Exemplo — cadastro de produto**
 
@@ -158,11 +155,12 @@ liberação por farmacêutico.
 
 - [x] **Fase 1 — Fundação**
       PostgreSQL em container, Flyway, CRUD de produto com DTOs e validação,
-      filtros dinâmicos com Specification, tratamento global de erro.
+      listagem paginada com filtros, tratamento centralizado de erro e
+      documentação OpenAPI.
 
 - [ ] **Fase 2 — Segurança**
-      Usuários no banco, BCrypt, JWT assinado com par de chaves RSA, refresh token
-      e autorização por perfil (atendente, farmacêutico, gerente).
+      Usuários no banco, BCrypt, JWT assinado com par de chaves RSA e autorização
+      por perfil (atendente, farmacêutico, gerente).
 
 - [ ] **Fase 3 — Estoque**
       Entrada de lote, movimentação como registro imutável, cálculo de
@@ -173,7 +171,7 @@ liberação por farmacêutico.
       com estorno nos lotes de origem e controle de concorrência.
 
 - [ ] **Fase 5 — Acabamento**
-      Relatórios, documentação OpenAPI e testes de integração com Testcontainers.
+      Relatórios e cobertura de testes de integração das regras de negócio.
 
 - [ ] **Fase 6 — Entrega**
       Dockerfile, pipeline no GitHub Actions e deploy.
