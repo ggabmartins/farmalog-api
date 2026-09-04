@@ -9,9 +9,10 @@ independentes.
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
 
-> ⚠️ **Projeto em desenvolvimento ativo.** A fase 1 está concluída. As demais estão
-> descritas no roadmap abaixo. A modelagem é uma simplificação inspirada na operação
-> real de uma farmácia e não implementa conformidade regulatória.
+> ⚠️ **Projeto em desenvolvimento ativo.** As fases 1 e 2 estão concluídas. As
+> demais estão descritas no roadmap abaixo. A modelagem é uma simplificação
+> inspirada na operação real de uma farmácia e não implementa conformidade
+> regulatória.
 
 ---
 
