@@ -17,7 +17,7 @@ public record ProdutoResponse(
 		boolean ativo
 ) {
 
-	public static ProdutoResponse from(Produto produto) {
+	public static ProdutoResponse fromEntity(Produto produto) {
 		return new ProdutoResponse(
 				produto.getId(),
 				produto.getNome(),

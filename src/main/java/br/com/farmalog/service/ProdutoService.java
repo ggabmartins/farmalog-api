@@ -28,27 +28,19 @@ public class ProdutoService {
 			throw new ResponseStatusException(HttpStatus.CONFLICT,
 					"Já existe produto com o código de barras " + req.codigoBarras());
 		}
-		Produto produto = Produto.builder()
-				.nome(req.nome())
-				.principioAtivo(req.principioAtivo())
-				.fabricante(req.fabricante())
-				.codigoBarras(req.codigoBarras())
-				.precoVenda(req.precoVenda())
-				.exigencia(req.exigencia())
-				.estoqueMinimo(req.estoqueMinimo())
-				.ativo(true)
-				.build();
-		return ProdutoResponse.from(repository.save(produto));
+		Produto produto = req.toEntity();
+		produto.setAtivo(true);
+		return ProdutoResponse.fromEntity(repository.save(produto));
 	}
 
 	public Page<ProdutoResponse> listar(ProdutoFiltro filtro, Pageable pageable) {
 		boolean ativo = filtro.ativo() == null || filtro.ativo();
 		return repository.buscar(filtro.nome(), filtro.principioAtivo(), filtro.exigencia(), ativo, pageable)
-				.map(ProdutoResponse::from);
+				.map(ProdutoResponse::fromEntity);
 	}
 
 	public ProdutoResponse buscarPorId(Long id) {
-		return ProdutoResponse.from(buscarEntidade(id));
+		return ProdutoResponse.fromEntity(buscarEntidade(id));
 	}
 
 	@Transactional
@@ -65,7 +57,7 @@ public class ProdutoService {
 		produto.setPrecoVenda(req.precoVenda());
 		produto.setExigencia(req.exigencia());
 		produto.setEstoqueMinimo(req.estoqueMinimo());
-		return ProdutoResponse.from(produto);
+		return ProdutoResponse.fromEntity(produto);
 	}
 
 	@Transactional
