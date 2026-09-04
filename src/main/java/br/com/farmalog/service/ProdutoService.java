@@ -72,7 +72,7 @@ public class ProdutoService {
 
 	@Transactional
 	public void desativar(Long id) {
-		buscarEntidade(id).desativar();
+		buscarEntidade(id).setAtivo(false);
 	}
 
 	private Produto buscarEntidade(Long id) {

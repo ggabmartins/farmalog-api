@@ -69,8 +69,14 @@ class ProdutoServiceTest {
 
 	@Test
 	void desativar_produtoExistente_marcaComoInativo() {
-		Produto produto = new Produto("Dipirona", "Dipirona sódica", "EMS", "7891234567890",
-				new BigDecimal("12.90"), ExigenciaReceita.ISENTO, 10);
+		Produto produto = Produto.builder()
+				.nome("Dipirona")
+				.codigoBarras("7891234567890")
+				.precoVenda(new BigDecimal("12.90"))
+				.exigencia(ExigenciaReceita.ISENTO)
+				.estoqueMinimo(10)
+				.ativo(true)
+				.build();
 		when(repository.findById(1L)).thenReturn(Optional.of(produto));
 
 		service.desativar(1L);
