@@ -1,6 +1,7 @@
-package br.com.farmalog.produto.dto;
+package br.com.farmalog.dto;
 
-import br.com.farmalog.produto.entity.ExigenciaReceita;
+import br.com.farmalog.entity.ExigenciaReceita;
+import br.com.farmalog.entity.Produto;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -40,4 +41,15 @@ public record ProdutoRequest(
 		@PositiveOrZero(message = "O estoque mínimo não pode ser negativo")
 		Integer estoqueMinimo
 ) {
+	public Produto toEntity() {
+		return Produto.builder()
+				.nome(nome)
+				.principioAtivo(principioAtivo)
+				.fabricante(fabricante)
+				.codigoBarras(codigoBarras)
+				.precoVenda(precoVenda)
+				.exigencia(exigencia)
+				.estoqueMinimo(estoqueMinimo)
+				.build();
+	}
 }
