@@ -7,7 +7,6 @@ import br.com.farmalog.entity.Produto;
 import br.com.farmalog.repository.ProdutoRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,12 +41,10 @@ public class ProdutoService {
 		return ProdutoResponse.from(repository.save(produto));
 	}
 
-	public PagedModel<ProdutoResponse> listar(ProdutoFiltro filtro, Pageable pageable) {
+	public Page<ProdutoResponse> listar(ProdutoFiltro filtro, Pageable pageable) {
 		boolean ativo = filtro.ativo() == null || filtro.ativo();
-		Page<ProdutoResponse> pagina = repository
-				.buscar(filtro.nome(), filtro.principioAtivo(), filtro.exigencia(), ativo, pageable)
+		return repository.buscar(filtro.nome(), filtro.principioAtivo(), filtro.exigencia(), ativo, pageable)
 				.map(ProdutoResponse::from);
-		return new PagedModel<>(pagina);
 	}
 
 	public ProdutoResponse buscarPorId(Long id) {

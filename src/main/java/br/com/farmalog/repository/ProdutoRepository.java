@@ -16,8 +16,8 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
 	@Query("""
 			SELECT p FROM Produto p WHERE
-			(:nome IS NULL OR LOWER(p.nome) LIKE LOWER(CONCAT('%', :nome, '%'))) AND
-			(:principioAtivo IS NULL OR LOWER(p.principioAtivo) LIKE LOWER(CONCAT('%', :principioAtivo, '%'))) AND
+			(:nome IS NULL OR LOWER(p.nome) LIKE LOWER(CONCAT('%', CAST(:nome AS string), '%'))) AND
+			(:principioAtivo IS NULL OR LOWER(p.principioAtivo) LIKE LOWER(CONCAT('%', CAST(:principioAtivo AS string), '%'))) AND
 			(:exigencia IS NULL OR p.exigencia = :exigencia) AND
 			p.ativo = :ativo
 			""")

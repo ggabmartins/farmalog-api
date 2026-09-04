@@ -5,9 +5,9 @@ import br.com.farmalog.service.ProdutoService;
 import br.com.farmalog.dto.ProdutoRequest;
 import br.com.farmalog.dto.ProdutoResponse;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -42,7 +42,7 @@ public class ProdutoController {
 	}
 
 	@GetMapping
-	PagedModel<ProdutoResponse> listar(ProdutoFiltro filtro,
+	Page<ProdutoResponse> listar(ProdutoFiltro filtro,
 			@PageableDefault(sort = "nome") Pageable pageable) {
 		return service.listar(filtro, pageable);
 	}
