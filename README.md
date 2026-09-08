@@ -9,7 +9,7 @@ independentes.
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
 
-> ⚠️ **Projeto em desenvolvimento ativo.** As fases 1 e 2 estão concluídas. As
+> ⚠️ **Projeto em desenvolvimento ativo.** As fases 1 a 3 estão concluídas. As
 > demais estão descritas no roadmap abaixo. A modelagem é uma simplificação
 > inspirada na operação real de uma farmácia e não implementa conformidade
 > regulatória.
@@ -177,7 +177,7 @@ liberação por farmacêutico.
       Usuários no banco, BCrypt, JWT assinado com par de chaves RSA, login e
       autorização por perfil (atendente, farmacêutico, gerente).
 
-- [ ] **Fase 3 — Estoque**
+- [x] **Fase 3 — Estoque**
       Entrada de lote, movimentação como registro imutável, cálculo de
       disponibilidade ignorando vencidos, alertas de validade e estoque mínimo.
 
