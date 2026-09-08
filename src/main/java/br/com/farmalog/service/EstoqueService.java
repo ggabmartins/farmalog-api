@@ -13,6 +13,7 @@ import br.com.farmalog.repository.ProdutoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -84,7 +85,8 @@ public class EstoqueService {
 	public AlertasResponse alertas(int dias) {
 		LocalDate hoje = LocalDate.now();
 
-		List<AlertasResponse.ProdutoAbaixoDoMinimo> abaixo = produtoRepository.abaixoDoMinimo(hoje).stream()
+		List<AlertasResponse.ProdutoAbaixoDoMinimo> abaixo = produtoRepository
+				.buscar(null, null, null, true, true, hoje, Pageable.unpaged(Sort.by("nome"))).stream()
 				.map(p -> new AlertasResponse.ProdutoAbaixoDoMinimo(
 						p.getId(), p.getNome(), p.getEstoqueMinimo(),
 						loteRepository.disponivelPara(p.getId(), hoje)))

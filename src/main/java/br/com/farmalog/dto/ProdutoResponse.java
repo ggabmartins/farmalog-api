@@ -14,10 +14,11 @@ public record ProdutoResponse(
 		BigDecimal precoVenda,
 		ExigenciaReceita exigencia,
 		Integer estoqueMinimo,
+		int quantidadeEmEstoque,
 		boolean ativo
 ) {
 
-	public static ProdutoResponse fromEntity(Produto produto) {
+	public static ProdutoResponse fromEntity(Produto produto, int quantidadeEmEstoque) {
 		return new ProdutoResponse(
 				produto.getId(),
 				produto.getNome(),
@@ -27,6 +28,7 @@ public record ProdutoResponse(
 				produto.getPrecoVenda(),
 				produto.getExigencia(),
 				produto.getEstoqueMinimo(),
+				quantidadeEmEstoque,
 				produto.isAtivo()
 		);
 	}

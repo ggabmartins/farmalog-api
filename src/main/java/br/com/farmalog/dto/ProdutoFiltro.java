@@ -6,6 +6,7 @@ public record ProdutoFiltro(
 		String nome,
 		String principioAtivo,
 		ExigenciaReceita exigencia,
-		Boolean ativo
+		Boolean ativo,
+		Boolean abaixoDoMinimo
 ) {
 }

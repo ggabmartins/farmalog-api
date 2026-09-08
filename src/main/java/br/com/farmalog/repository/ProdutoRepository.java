@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
-import java.util.List;
 
 public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
@@ -22,20 +21,16 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 			(:nome IS NULL OR LOWER(p.nome) LIKE LOWER(CONCAT('%', CAST(:nome AS string), '%'))) AND
 			(:principioAtivo IS NULL OR LOWER(p.principioAtivo) LIKE LOWER(CONCAT('%', CAST(:principioAtivo AS string), '%'))) AND
 			(:exigencia IS NULL OR p.exigencia = :exigencia) AND
-			p.ativo = :ativo
+			p.ativo = :ativo AND
+			(:abaixoDoMinimo = false OR p.estoqueMinimo > COALESCE(
+				(SELECT SUM(l.quantidadeAtual) FROM Lote l
+				 WHERE l.produto = p AND l.quantidadeAtual > 0 AND l.dataValidade >= :hoje), 0))
 			""")
 	Page<Produto> buscar(@Param("nome") String nome,
 			@Param("principioAtivo") String principioAtivo,
 			@Param("exigencia") ExigenciaReceita exigencia,
 			@Param("ativo") boolean ativo,
+			@Param("abaixoDoMinimo") boolean abaixoDoMinimo,
+			@Param("hoje") LocalDate hoje,
 			Pageable pageable);
-
-	@Query("""
-			SELECT p FROM Produto p
-			WHERE p.ativo = true AND p.estoqueMinimo > COALESCE(
-				(SELECT SUM(l.quantidadeAtual) FROM Lote l
-				 WHERE l.produto = p AND l.quantidadeAtual > 0 AND l.dataValidade >= :hoje), 0)
-			ORDER BY p.nome
-			""")
-	List<Produto> abaixoDoMinimo(@Param("hoje") LocalDate hoje);
 }
