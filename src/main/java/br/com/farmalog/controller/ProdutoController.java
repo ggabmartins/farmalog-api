@@ -38,7 +38,7 @@ public class ProdutoController {
 	private final ProdutoService service;
 
 	@GetMapping
-	@Operation(summary = "Lista produtos com paginação e filtros opcionais por nome, princípio ativo, exigência e ativo")
+	@Operation(summary = "Lista produtos com paginação e filtros opcionais por nome, princípio ativo, exigência, ativo e abaixo do mínimo")
 	public Page<ProdutoResponse> listar(ProdutoFiltro filtro,
 			@PageableDefault(sort = "nome") Pageable pageable) {
 		return service.listar(filtro, pageable);

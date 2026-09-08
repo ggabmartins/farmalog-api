@@ -3,6 +3,7 @@ package br.com.farmalog.service;
 import br.com.farmalog.dto.ProdutoRequest;
 import br.com.farmalog.entity.ExigenciaReceita;
 import br.com.farmalog.entity.Produto;
+import br.com.farmalog.repository.LoteRepository;
 import br.com.farmalog.repository.ProdutoRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +28,9 @@ class ProdutoServiceTest {
 
 	@Mock
 	ProdutoRepository repository;
+
+	@Mock
+	LoteRepository loteRepository;
 
 	@InjectMocks
 	ProdutoService service;

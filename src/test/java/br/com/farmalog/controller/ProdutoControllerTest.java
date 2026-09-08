@@ -48,7 +48,7 @@ class ProdutoControllerTest {
 	@Test
 	void criar_valido_retorna201ComLocation() throws Exception {
 		var response = new ProdutoResponse(1L, "Dipirona", "Dipirona sódica", "EMS",
-				"7891234567890", new BigDecimal("12.90"), ExigenciaReceita.ISENTO, 10, true);
+				"7891234567890", new BigDecimal("12.90"), ExigenciaReceita.ISENTO, 10, 0, true);
 		when(service.criar(any())).thenReturn(response);
 
 		mockMvc.perform(post("/api/v1/produtos")
