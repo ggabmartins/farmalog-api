@@ -1,5 +1,6 @@
 package br.com.farmalog.service;
 
+import br.com.farmalog.dto.DescarteRequest;
 import br.com.farmalog.dto.LoteRequest;
 import br.com.farmalog.dto.LoteResponse;
 import br.com.farmalog.entity.Lote;
@@ -57,6 +58,19 @@ public class LoteService {
 		Lote lote = loteRepository.findById(loteId)
 				.filter(l -> l.getProduto().getId().equals(produtoId))
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lote " + loteId + " não encontrado"));
+		return LoteResponse.fromEntity(lote);
+	}
+
+	@Transactional
+	public LoteResponse descartar(Long loteId, DescarteRequest req, String emailUsuario) {
+		Lote lote = loteRepository.findById(loteId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lote " + loteId + " não encontrado"));
+		if (!lote.isVencido()) {
+			throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+					"Só é permitido descarte de lote vencido");
+		}
+		Usuario usuario = usuarioAtual(emailUsuario);
+		estoqueService.registrar(lote, TipoMovimentacao.DESCARTE, req.quantidade(), usuario, req.observacao());
 		return LoteResponse.fromEntity(lote);
 	}
 

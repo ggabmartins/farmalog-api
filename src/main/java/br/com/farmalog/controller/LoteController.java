@@ -1,5 +1,6 @@
 package br.com.farmalog.controller;
 
+import br.com.farmalog.dto.DescarteRequest;
 import br.com.farmalog.dto.LoteRequest;
 import br.com.farmalog.dto.LoteResponse;
 import br.com.farmalog.service.LoteService;
@@ -62,5 +63,18 @@ public class LoteController {
 		URI location = uriBuilder.path("/api/v1/produtos/{produtoId}/lotes/{loteId}")
 				.buildAndExpand(produtoId, lote.id()).toUri();
 		return ResponseEntity.created(location).body(lote);
+	}
+
+	@PostMapping("/lotes/{loteId}/descarte")
+	@PreAuthorize("hasAnyRole('FARMACEUTICO', 'GERENTE')")
+	@Operation(summary = "Descarta um lote vencido (parcial ou total), com observação obrigatória")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "Descarte registrado"),
+			@ApiResponse(responseCode = "404", description = "Lote não encontrado"),
+			@ApiResponse(responseCode = "422", description = "Lote não vencido ou saldo insuficiente")
+	})
+	public LoteResponse descartar(@PathVariable Long loteId, @Valid @RequestBody DescarteRequest req,
+			Authentication authentication) {
+		return service.descartar(loteId, req, authentication.getName());
 	}
 }
