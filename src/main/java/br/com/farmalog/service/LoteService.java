@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -52,6 +54,11 @@ public class LoteService {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto " + produtoId + " não encontrado");
 		}
 		return loteRepository.findByProdutoId(produtoId, pageable).map(LoteResponse::fromEntity);
+	}
+
+	public Page<LoteResponse> listarVencendo(int dias, Pageable pageable) {
+		LocalDate hoje = LocalDate.now();
+		return loteRepository.vencendoEntre(hoje, hoje.plusDays(dias), pageable).map(LoteResponse::fromEntity);
 	}
 
 	public LoteResponse buscarPorId(Long produtoId, Long loteId) {

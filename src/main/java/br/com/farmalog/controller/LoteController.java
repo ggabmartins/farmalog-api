@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -63,6 +64,13 @@ public class LoteController {
 		URI location = uriBuilder.path("/api/v1/produtos/{produtoId}/lotes/{loteId}")
 				.buildAndExpand(produtoId, lote.id()).toUri();
 		return ResponseEntity.created(location).body(lote);
+	}
+
+	@GetMapping("/lotes/vencendo")
+	@Operation(summary = "Lista lotes com saldo que vencem dentro de N dias")
+	public Page<LoteResponse> vencendo(@RequestParam(defaultValue = "30") int dias,
+			@PageableDefault(sort = "dataValidade") Pageable pageable) {
+		return service.listarVencendo(dias, pageable);
 	}
 
 	@PostMapping("/lotes/{loteId}/descarte")

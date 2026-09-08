@@ -1,5 +1,6 @@
 package br.com.farmalog.controller;
 
+import br.com.farmalog.dto.AlertasResponse;
 import br.com.farmalog.dto.MovimentacaoFiltro;
 import br.com.farmalog.dto.MovimentacaoResponse;
 import br.com.farmalog.service.EstoqueService;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -27,5 +29,11 @@ public class EstoqueController {
 	public Page<MovimentacaoResponse> movimentacoes(MovimentacaoFiltro filtro,
 			@PageableDefault(sort = "dataHora", direction = Sort.Direction.DESC) Pageable pageable) {
 		return service.listarMovimentacoes(filtro, pageable);
+	}
+
+	@GetMapping("/alertas")
+	@Operation(summary = "Produtos abaixo do estoque mínimo e lotes vencendo dentro de N dias")
+	public AlertasResponse alertas(@RequestParam(defaultValue = "30") int dias) {
+		return service.alertas(dias);
 	}
 }

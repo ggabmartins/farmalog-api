@@ -8,6 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
+import java.util.List;
+
 public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
 	boolean existsByCodigoBarras(String codigoBarras);
@@ -26,4 +29,13 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 			@Param("exigencia") ExigenciaReceita exigencia,
 			@Param("ativo") boolean ativo,
 			Pageable pageable);
+
+	@Query("""
+			SELECT p FROM Produto p
+			WHERE p.ativo = true AND p.estoqueMinimo > COALESCE(
+				(SELECT SUM(l.quantidadeAtual) FROM Lote l
+				 WHERE l.produto = p AND l.quantidadeAtual > 0 AND l.dataValidade >= :hoje), 0)
+			ORDER BY p.nome
+			""")
+	List<Produto> abaixoDoMinimo(@Param("hoje") LocalDate hoje);
 }

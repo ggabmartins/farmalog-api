@@ -1,12 +1,15 @@
 package br.com.farmalog.service;
 
+import br.com.farmalog.dto.AlertasResponse;
 import br.com.farmalog.dto.MovimentacaoFiltro;
 import br.com.farmalog.dto.MovimentacaoResponse;
 import br.com.farmalog.entity.Lote;
 import br.com.farmalog.entity.MovimentacaoEstoque;
 import br.com.farmalog.entity.TipoMovimentacao;
 import br.com.farmalog.entity.Usuario;
+import br.com.farmalog.repository.LoteRepository;
 import br.com.farmalog.repository.MovimentacaoEstoqueRepository;
+import br.com.farmalog.repository.ProdutoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,7 +21,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
 // Ponto único de alteração de saldo de lote (RN-04): toda mudança passa por aqui
@@ -34,6 +39,8 @@ public class EstoqueService {
 			EnumSet.of(TipoMovimentacao.DESCARTE, TipoMovimentacao.AJUSTE);
 
 	private final MovimentacaoEstoqueRepository movimentacaoRepository;
+	private final LoteRepository loteRepository;
+	private final ProdutoRepository produtoRepository;
 
 	@Transactional
 	public MovimentacaoEstoque registrar(Lote lote, TipoMovimentacao tipo, int quantidade,
@@ -72,6 +79,25 @@ public class EstoqueService {
 		return movimentacaoRepository
 				.buscar(filtro.tipo(), filtro.loteId(), inicio, fim, pageable)
 				.map(MovimentacaoResponse::fromEntity);
+	}
+
+	public AlertasResponse alertas(int dias) {
+		LocalDate hoje = LocalDate.now();
+
+		List<AlertasResponse.ProdutoAbaixoDoMinimo> abaixo = produtoRepository.abaixoDoMinimo(hoje).stream()
+				.map(p -> new AlertasResponse.ProdutoAbaixoDoMinimo(
+						p.getId(), p.getNome(), p.getEstoqueMinimo(),
+						loteRepository.disponivelPara(p.getId(), hoje)))
+				.toList();
+
+		List<AlertasResponse.LoteVencendo> vencendo = loteRepository.vencendoAte(hoje, hoje.plusDays(dias)).stream()
+				.map(l -> new AlertasResponse.LoteVencendo(
+						l.getId(), l.getProduto().getId(), l.getProduto().getNome(), l.getCodigo(),
+						l.getDataValidade(), l.getQuantidadeAtual(),
+						ChronoUnit.DAYS.between(hoje, l.getDataValidade())))
+				.toList();
+
+		return new AlertasResponse(abaixo, vencendo);
 	}
 
 	private static Instant aInstante(LocalDate data) {
