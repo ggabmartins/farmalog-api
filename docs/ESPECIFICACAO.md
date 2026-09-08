@@ -3,9 +3,10 @@
 API REST para controle de estoque por lote, gestão de validade e registro de vendas
 em farmácias de pequeno porte.
 
-> Documento de referência do projeto. A modelagem e as regras aqui descritas são
-> uma simplificação inspirada na operação real de uma farmácia — não constituem
-> implementação de conformidade regulatória.
+> Documento de referência do projeto, mantido em dia com o que foi implementado.
+> A modelagem e as regras aqui descritas são uma simplificação inspirada na
+> operação real de uma farmácia — não constituem implementação de conformidade
+> regulatória.
 
 ---
 
@@ -14,20 +15,20 @@ em farmácias de pequeno porte.
 | Item | Escolha |
 |---|---|
 | Linguagem | Java 21 |
-| Framework | Spring Boot 3.x |
+| Framework | Spring Boot 4.1 |
 | Build | Maven |
 | Segurança | Spring Security + OAuth2 Resource Server (JWT com par de chaves RSA) |
 | Persistência | Spring Data JPA / Hibernate |
 | Banco | PostgreSQL (via Docker Compose) |
 | Migrations | Flyway |
 | Documentação | springdoc-openapi (Swagger UI) |
-| Testes | JUnit 5, Mockito, Testcontainers |
+| Testes | JUnit 5, Mockito, Spring Boot Test |
 | Container | Docker |
 | CI | GitHub Actions |
 
-**Organização do código:** pacote por feature (`auth`, `produto`, `lote`, `venda`,
-`estoque`, `relatorio`), não por camada. Dentro de cada feature: `Controller`,
-`Service`, `Repository`, `entity`, `dto`.
+**Organização do código:** pacote por camada — `controller`, `service`,
+`repository`, `entity`, `dto`, com o tratamento de erro em `validation` e a
+autenticação em `auth`.
 
 ---
 
@@ -195,7 +196,6 @@ Prefixo: `/api/v1`
 | Método | Rota | Perfil |
 |---|---|---|
 | POST | `/auth/login` | público |
-| POST | `/auth/refresh` | público (com refresh token) |
 | GET | `/auth/me` | autenticado |
 
 ### Produtos
@@ -250,8 +250,9 @@ Prefixo: `/api/v1`
 - **DTOs sempre.** Entidade JPA nunca aparece na assinatura de um controller, nem na
   entrada nem na saída. Usar `record` para os DTOs.
 - **Bean Validation** nos DTOs de entrada, com mensagens em português.
-- **`@RestControllerAdvice`** centralizando o tratamento de erro, devolvendo
-  `ProblemDetail` (RFC 7807).
+- **`@RestControllerAdvice`** centralizando o tratamento de erro. Regra de negócio
+  e falhas via `ResponseStatusException` devolvem `{ status, message }`; erro de
+  validação devolve uma lista de `{ field, message }`. Sem stack trace na resposta.
 - **`BigDecimal`** para todo valor monetário.
 - **`Instant`** para data e hora; `LocalDate` para datas sem hora.
 - **Paginação** com `Pageable` em toda listagem.
@@ -269,7 +270,7 @@ segurança ainda.
 
 **Fase 2 — Segurança**
 Entidade `Usuario` no banco, `UserDetailsService` customizado, BCrypt, geração e
-validação de JWT com chaves RSA, refresh token, `@PreAuthorize` por perfil.
+validação de JWT com chaves RSA, `@PreAuthorize` por perfil, CRUD de usuários.
 
 **Fase 3 — Estoque**
 Entrada de lote, `MovimentacaoEstoque` como registro imutável, cálculo de
@@ -280,7 +281,7 @@ Fluxo de venda com FEFO, atomicidade, regra de receita, cancelamento com estorno
 lock otimista.
 
 **Fase 5 — Acabamento**
-Relatórios, Swagger, testes unitários das regras e de integração com Testcontainers.
+Relatórios e testes de integração das regras de negócio. (Swagger já entrou na Fase 2.)
 
 **Fase 6 — Entrega**
 Dockerfile, GitHub Actions, deploy, README.

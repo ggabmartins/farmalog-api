@@ -4,6 +4,7 @@ import br.com.farmalog.dto.ProdutoFiltro;
 import br.com.farmalog.dto.ProdutoRequest;
 import br.com.farmalog.dto.ProdutoResponse;
 import br.com.farmalog.entity.Produto;
+import br.com.farmalog.repository.LoteRepository;
 import br.com.farmalog.repository.ProdutoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -13,12 +14,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ProdutoService {
 
 	private final ProdutoRepository repository;
+	private final LoteRepository loteRepository;
 
 	@Transactional
 	public ProdutoResponse criar(ProdutoRequest req) {
@@ -28,17 +35,24 @@ public class ProdutoService {
 		}
 		Produto produto = req.toEntity();
 		produto.setAtivo(true);
-		return ProdutoResponse.fromEntity(repository.save(produto));
+		return ProdutoResponse.fromEntity(repository.save(produto), 0);
 	}
 
 	public Page<ProdutoResponse> listar(ProdutoFiltro filtro, Pageable pageable) {
 		boolean ativo = filtro.ativo() == null || filtro.ativo();
-		return repository.buscar(filtro.nome(), filtro.principioAtivo(), filtro.exigencia(), ativo, pageable)
-				.map(ProdutoResponse::fromEntity);
+		boolean abaixoDoMinimo = Boolean.TRUE.equals(filtro.abaixoDoMinimo());
+		LocalDate hoje = LocalDate.now();
+
+		Page<Produto> produtos = repository.buscar(filtro.nome(), filtro.principioAtivo(), filtro.exigencia(),
+				ativo, abaixoDoMinimo, hoje, pageable);
+		Map<Long, Integer> estoque = estoquePorProduto(produtos.getContent(), hoje);
+
+		return produtos.map(p -> ProdutoResponse.fromEntity(p, estoque.getOrDefault(p.getId(), 0)));
 	}
 
 	public ProdutoResponse buscarPorId(Long id) {
-		return ProdutoResponse.fromEntity(buscarEntidade(id));
+		Produto produto = buscarEntidade(id);
+		return ProdutoResponse.fromEntity(produto, loteRepository.disponivelPara(id, LocalDate.now()));
 	}
 
 	@Transactional
@@ -55,7 +69,7 @@ public class ProdutoService {
 		produto.setPrecoVenda(req.precoVenda());
 		produto.setExigencia(req.exigencia());
 		produto.setEstoqueMinimo(req.estoqueMinimo());
-		return ProdutoResponse.fromEntity(produto);
+		return ProdutoResponse.fromEntity(produto, loteRepository.disponivelPara(id, LocalDate.now()));
 	}
 
 	@Transactional
@@ -67,5 +81,14 @@ public class ProdutoService {
 		return repository.findById(id)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
 						"Produto " + id + " não encontrado"));
+	}
+
+	private Map<Long, Integer> estoquePorProduto(List<Produto> produtos, LocalDate hoje) {
+		if (produtos.isEmpty()) {
+			return Map.of();
+		}
+		List<Long> ids = produtos.stream().map(Produto::getId).toList();
+		return loteRepository.disponivelPorProduto(ids, hoje).stream()
+				.collect(Collectors.toMap(linha -> (Long) linha[0], linha -> ((Number) linha[1]).intValue()));
 	}
 }
