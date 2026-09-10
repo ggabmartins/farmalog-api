@@ -200,4 +200,4 @@ A especificação completa do domínio, com as regras de negócio numeradas, est
 
 **Gabriel Lourenço** — Desenvolvedor Back-End
 
-[GitHub](https://github.com/ggabmartins) · [LinkedIn](https://www.linkedin.com/in/ggabmartins/)
+[GitHub](https://github.com/ggabmartins) · [LinkedIn](https://www.linkedin.com/in/ggabmartins/) · [Portfólio](https://gabmartins.dev)
