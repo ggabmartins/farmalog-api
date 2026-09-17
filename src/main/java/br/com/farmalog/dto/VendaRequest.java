@@ -13,6 +13,9 @@ public record VendaRequest(
 
 		@NotEmpty(message = "A venda precisa de pelo menos um item")
 		@Valid
-		List<ItemVendaRequest> itens
+		List<ItemVendaRequest> itens,
+
+		@Valid
+		ReceitaRequest receita
 ) {
 }

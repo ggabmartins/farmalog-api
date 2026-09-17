@@ -1,11 +1,15 @@
 package br.com.farmalog.service;
 
 import br.com.farmalog.dto.ItemVendaRequest;
+import br.com.farmalog.dto.ReceitaRequest;
 import br.com.farmalog.dto.VendaRequest;
 import br.com.farmalog.dto.VendaResponse;
+import br.com.farmalog.entity.ExigenciaReceita;
 import br.com.farmalog.entity.ItemVenda;
 import br.com.farmalog.entity.Lote;
+import br.com.farmalog.entity.Perfil;
 import br.com.farmalog.entity.Produto;
+import br.com.farmalog.entity.Receita;
 import br.com.farmalog.entity.StatusVenda;
 import br.com.farmalog.entity.TipoMovimentacao;
 import br.com.farmalog.entity.Usuario;
@@ -13,6 +17,7 @@ import br.com.farmalog.entity.Venda;
 import br.com.farmalog.repository.ItemVendaRepository;
 import br.com.farmalog.repository.LoteRepository;
 import br.com.farmalog.repository.ProdutoRepository;
+import br.com.farmalog.repository.ReceitaRepository;
 import br.com.farmalog.repository.UsuarioRepository;
 import br.com.farmalog.repository.VendaRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +40,7 @@ public class VendaService {
 
 	private final VendaRepository vendaRepository;
 	private final ItemVendaRepository itemVendaRepository;
+	private final ReceitaRepository receitaRepository;
 	private final ProdutoRepository produtoRepository;
 	private final LoteRepository loteRepository;
 	private final UsuarioRepository usuarioRepository;
@@ -54,6 +60,7 @@ public class VendaService {
 		Set<Long> produtosNoCarrinho = new HashSet<>();
 		List<ItemVenda> itens = new ArrayList<>();
 		BigDecimal total = BigDecimal.ZERO;
+		boolean exigeReceita = false;
 
 		for (ItemVendaRequest linha : req.itens()) {
 			if (!produtosNoCarrinho.add(linha.produtoId())) {
@@ -65,6 +72,10 @@ public class VendaService {
 					.filter(Produto::isAtivo)
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
 							"Produto " + linha.produtoId() + " não encontrado"));
+
+			if (produto.getExigencia() != ExigenciaReceita.ISENTO) {
+				exigeReceita = true;
+			}
 
 			ItemVenda item = itemVendaRepository.save(ItemVenda.builder()
 					.venda(venda)
@@ -80,8 +91,32 @@ public class VendaService {
 			total = total.add(item.getSubtotal());
 		}
 
+		if (exigeReceita) {
+			registrarReceita(req.receita(), venda, operador);
+		}
+
 		venda.setValorTotal(total);
 		return VendaResponse.fromEntity(venda, itens);
+	}
+
+	private void registrarReceita(ReceitaRequest receitaReq, Venda venda, Usuario operador) {
+		if (operador.getPerfil() == Perfil.ATENDENTE) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+					"Atendente não pode vender produto que exige receita");
+		}
+		if (receitaReq == null) {
+			throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+					"Receita é obrigatória para produto que exige receita");
+		}
+
+		venda.setFarmaceutico(operador);
+		receitaRepository.save(Receita.builder()
+				.venda(venda)
+				.numero(receitaReq.numero())
+				.crmMedico(receitaReq.crmMedico())
+				.dataEmissao(receitaReq.dataEmissao())
+				.farmaceutico(operador)
+				.build());
 	}
 
 	private void consumirEstoqueFefo(ItemVenda item, Usuario operador) {

@@ -31,8 +31,9 @@ public class VendaController {
 	@Operation(summary = "Registra uma venda, com baixa de estoque por FEFO")
 	@ApiResponses({
 			@ApiResponse(responseCode = "201", description = "Venda registrada"),
+			@ApiResponse(responseCode = "403", description = "Perfil sem permissão para vender produto com receita"),
 			@ApiResponse(responseCode = "404", description = "Produto não encontrado"),
-			@ApiResponse(responseCode = "422", description = "Item repetido no carrinho ou estoque insuficiente")
+			@ApiResponse(responseCode = "422", description = "Item repetido, estoque insuficiente ou receita ausente")
 	})
 	public ResponseEntity<VendaResponse> registrar(@Valid @RequestBody VendaRequest req,
 			Authentication authentication, UriComponentsBuilder uriBuilder) {
