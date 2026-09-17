@@ -7,6 +7,7 @@ import br.com.farmalog.dto.VendaResponse;
 import br.com.farmalog.entity.ExigenciaReceita;
 import br.com.farmalog.entity.ItemVenda;
 import br.com.farmalog.entity.Lote;
+import br.com.farmalog.entity.MovimentacaoEstoque;
 import br.com.farmalog.entity.Perfil;
 import br.com.farmalog.entity.Produto;
 import br.com.farmalog.entity.Receita;
@@ -16,6 +17,7 @@ import br.com.farmalog.entity.Usuario;
 import br.com.farmalog.entity.Venda;
 import br.com.farmalog.repository.ItemVendaRepository;
 import br.com.farmalog.repository.LoteRepository;
+import br.com.farmalog.repository.MovimentacaoEstoqueRepository;
 import br.com.farmalog.repository.ProdutoRepository;
 import br.com.farmalog.repository.ReceitaRepository;
 import br.com.farmalog.repository.UsuarioRepository;
@@ -41,6 +43,7 @@ public class VendaService {
 	private final VendaRepository vendaRepository;
 	private final ItemVendaRepository itemVendaRepository;
 	private final ReceitaRepository receitaRepository;
+	private final MovimentacaoEstoqueRepository movimentacaoRepository;
 	private final ProdutoRepository produtoRepository;
 	private final LoteRepository loteRepository;
 	private final UsuarioRepository usuarioRepository;
@@ -97,6 +100,26 @@ public class VendaService {
 
 		venda.setValorTotal(total);
 		return VendaResponse.fromEntity(venda, itens);
+	}
+
+	@Transactional
+	public void cancelar(Long vendaId, String emailUsuario) {
+		Venda venda = vendaRepository.findById(vendaId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+						"Venda " + vendaId + " não encontrada"));
+		if (venda.getStatus() == StatusVenda.CANCELADA) {
+			throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+					"Venda " + vendaId + " já está cancelada");
+		}
+
+		Usuario usuario = usuarioAtual(emailUsuario);
+
+		for (MovimentacaoEstoque saida : movimentacaoRepository.saidasDaVenda(vendaId)) {
+			estoqueService.registrar(saida.getLote(), TipoMovimentacao.ESTORNO, saida.getQuantidade(),
+					usuario, "Estorno da venda " + vendaId, saida.getItemVenda());
+		}
+
+		venda.setStatus(StatusVenda.CANCELADA);
 	}
 
 	private void registrarReceita(ReceitaRequest receitaReq, Venda venda, Usuario operador) {
