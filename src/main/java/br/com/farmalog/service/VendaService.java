@@ -2,6 +2,7 @@ package br.com.farmalog.service;
 
 import br.com.farmalog.dto.ItemVendaRequest;
 import br.com.farmalog.dto.ReceitaRequest;
+import br.com.farmalog.dto.VendaFiltro;
 import br.com.farmalog.dto.VendaRequest;
 import br.com.farmalog.dto.VendaResponse;
 import br.com.farmalog.entity.ExigenciaReceita;
@@ -23,17 +24,23 @@ import br.com.farmalog.repository.ReceitaRepository;
 import br.com.farmalog.repository.UsuarioRepository;
 import br.com.farmalog.repository.VendaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -122,6 +129,36 @@ public class VendaService {
 		venda.setStatus(StatusVenda.CANCELADA);
 	}
 
+	public Page<VendaResponse> listar(VendaFiltro filtro, String emailUsuario, Pageable pageable) {
+		Usuario usuario = usuarioAtual(emailUsuario);
+		Long operadorId = usuario.getPerfil() == Perfil.ATENDENTE ? usuario.getId() : null;
+
+		Instant inicio = aInstante(filtro.inicio());
+		Instant fim = filtro.fim() == null ? null : aInstante(filtro.fim().plusDays(1));
+
+		Page<Venda> vendas = vendaRepository.buscar(operadorId, inicio, fim, pageable);
+
+		List<Long> vendaIds = vendas.getContent().stream().map(Venda::getId).toList();
+		Map<Long, List<ItemVenda>> itensPorVenda = itemVendaRepository.findByVendaIdIn(vendaIds).stream()
+				.collect(Collectors.groupingBy(item -> item.getVenda().getId()));
+
+		return vendas.map(venda -> VendaResponse.fromEntity(venda, itensPorVenda.getOrDefault(venda.getId(), List.of())));
+	}
+
+	public VendaResponse buscarPorId(Long id, String emailUsuario) {
+		Venda venda = vendaRepository.findById(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Venda " + id + " não encontrada"));
+
+		Usuario usuario = usuarioAtual(emailUsuario);
+		boolean vendaDeOutroAtendente = usuario.getPerfil() == Perfil.ATENDENTE
+				&& !venda.getOperador().getId().equals(usuario.getId());
+		if (vendaDeOutroAtendente) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Venda " + id + " não encontrada");
+		}
+
+		return VendaResponse.fromEntity(venda, itemVendaRepository.findByVendaId(id));
+	}
+
 	private void registrarReceita(ReceitaRequest receitaReq, Venda venda, Usuario operador) {
 		if (operador.getPerfil() == Perfil.ATENDENTE) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
@@ -161,5 +198,9 @@ public class VendaService {
 	private Usuario usuarioAtual(String email) {
 		return usuarioRepository.findByEmail(email)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário não encontrado"));
+	}
+
+	private static Instant aInstante(LocalDate data) {
+		return data == null ? null : data.atStartOfDay(ZoneOffset.UTC).toInstant();
 	}
 }
