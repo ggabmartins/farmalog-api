@@ -37,6 +37,10 @@ public class MovimentacaoEstoque {
 	@JoinColumn(name = "lote_id", nullable = false)
 	private Lote lote;
 
+	@ManyToOne
+	@JoinColumn(name = "item_venda_id")
+	private ItemVenda itemVenda;
+
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 20)
 	private TipoMovimentacao tipo;
