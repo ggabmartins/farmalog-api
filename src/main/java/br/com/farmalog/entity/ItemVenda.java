@@ -2,8 +2,6 @@ package br.com.farmalog.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -15,10 +13,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Immutable;
 
-import java.time.Instant;
+import java.math.BigDecimal;
 
 @Entity
 @Immutable
@@ -26,36 +23,27 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Table(name = "movimentacao_estoque")
-public class MovimentacaoEstoque {
+@Table(name = "item_venda")
+public class ItemVenda {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
 	@ManyToOne(optional = false)
-	@JoinColumn(name = "lote_id", nullable = false)
-	private Lote lote;
+	@JoinColumn(name = "venda_id", nullable = false)
+	private Venda venda;
 
-	@ManyToOne
-	@JoinColumn(name = "item_venda_id")
-	private ItemVenda itemVenda;
-
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, length = 20)
-	private TipoMovimentacao tipo;
+	@ManyToOne(optional = false)
+	@JoinColumn(name = "produto_id", nullable = false)
+	private Produto produto;
 
 	@Column(nullable = false)
 	private Integer quantidade;
 
-	@ManyToOne(optional = false)
-	@JoinColumn(name = "usuario_id", nullable = false)
-	private Usuario usuario;
+	@Column(name = "preco_unitario", nullable = false, precision = 12, scale = 2)
+	private BigDecimal precoUnitario;
 
-	@CreationTimestamp
-	@Column(name = "data_hora", nullable = false, updatable = false)
-	private Instant dataHora;
-
-	@Column(length = 255)
-	private String observacao;
+	@Column(nullable = false, precision = 12, scale = 2)
+	private BigDecimal subtotal;
 }

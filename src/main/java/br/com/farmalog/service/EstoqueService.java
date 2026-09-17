@@ -3,6 +3,7 @@ package br.com.farmalog.service;
 import br.com.farmalog.dto.AlertasResponse;
 import br.com.farmalog.dto.MovimentacaoFiltro;
 import br.com.farmalog.dto.MovimentacaoResponse;
+import br.com.farmalog.entity.ItemVenda;
 import br.com.farmalog.entity.Lote;
 import br.com.farmalog.entity.MovimentacaoEstoque;
 import br.com.farmalog.entity.TipoMovimentacao;
@@ -27,8 +28,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-// Ponto único de alteração de saldo de lote (RN-04): toda mudança passa por aqui
-// e deixa uma MovimentacaoEstoque.
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -46,6 +45,12 @@ public class EstoqueService {
 	@Transactional
 	public MovimentacaoEstoque registrar(Lote lote, TipoMovimentacao tipo, int quantidade,
 			Usuario usuario, String observacao) {
+		return registrar(lote, tipo, quantidade, usuario, observacao, null);
+	}
+
+	@Transactional
+	public MovimentacaoEstoque registrar(Lote lote, TipoMovimentacao tipo, int quantidade,
+			Usuario usuario, String observacao, ItemVenda itemVenda) {
 
 		if (quantidade <= 0) {
 			throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "A quantidade deve ser positiva");
@@ -70,6 +75,7 @@ public class EstoqueService {
 				.quantidade(quantidade)
 				.usuario(usuario)
 				.observacao(observacao)
+				.itemVenda(itemVenda)
 				.build();
 		return movimentacaoRepository.save(movimentacao);
 	}

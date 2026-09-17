@@ -2,6 +2,7 @@ package br.com.farmalog.validation;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -37,5 +38,12 @@ public class ValidationHandler {
 				exception.getStatusCode().value(),
 				exception.getReason());
 		return ResponseEntity.status(exception.getStatusCode()).body(body);
+	}
+
+	@ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+	@ResponseStatus(HttpStatus.CONFLICT)
+	public ErrorResponse handleConflitoDeConcorrencia(ObjectOptimisticLockingFailureException exception) {
+		return new ErrorResponse(HttpStatus.CONFLICT.value(),
+				"O registro foi alterado por outra operação simultânea. Tente novamente.");
 	}
 }

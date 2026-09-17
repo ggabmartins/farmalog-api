@@ -48,4 +48,11 @@ public interface LoteRepository extends JpaRepository<Lote, Long> {
 			GROUP BY l.produto.id
 			""")
 	List<Object[]> disponivelPorProduto(@Param("produtoIds") Collection<Long> produtoIds, @Param("hoje") LocalDate hoje);
+
+	@Query("""
+			SELECT l FROM Lote l
+			WHERE l.produto.id = :produtoId AND l.quantidadeAtual > 0 AND l.dataValidade >= :hoje
+			ORDER BY l.dataValidade
+			""")
+	List<Lote> disponiveisFefo(@Param("produtoId") Long produtoId, @Param("hoje") LocalDate hoje);
 }

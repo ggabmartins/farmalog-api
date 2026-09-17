@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.util.List;
 
 public interface MovimentacaoEstoqueRepository extends JpaRepository<MovimentacaoEstoque, Long> {
 
@@ -34,4 +35,11 @@ public interface MovimentacaoEstoqueRepository extends JpaRepository<Movimentaca
 			@Param("inicio") Instant inicio,
 			@Param("fim") Instant fim,
 			Pageable pageable);
+
+	@Query("""
+			SELECT m FROM MovimentacaoEstoque m JOIN FETCH m.lote
+			WHERE m.tipo = br.com.farmalog.entity.TipoMovimentacao.SAIDA_VENDA
+			  AND m.itemVenda.venda.id = :vendaId
+			""")
+	List<MovimentacaoEstoque> saidasDaVenda(@Param("vendaId") Long vendaId);
 }

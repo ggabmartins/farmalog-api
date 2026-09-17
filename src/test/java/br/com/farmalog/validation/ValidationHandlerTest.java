@@ -9,6 +9,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,6 +46,13 @@ class ValidationHandlerTest {
 	}
 
 	@Test
+	void conflitoOtimista_retorna409() throws Exception {
+		mockMvc.perform(get("/teste/conflito-otimista"))
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.status").value(409));
+	}
+
+	@Test
 	void bodyInvalido_retorna400ComListaDeCampos() throws Exception {
 		mockMvc.perform(post("/teste/valida")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -66,6 +74,11 @@ class ValidationHandlerTest {
 		@GetMapping("/teste/duplicado")
 		void duplicado() {
 			throw new ResponseStatusException(HttpStatus.CONFLICT, "Código de barras já cadastrado");
+		}
+
+		@GetMapping("/teste/conflito-otimista")
+		void conflitoOtimista() {
+			throw new ObjectOptimisticLockingFailureException(Object.class, 1L);
 		}
 
 		@PostMapping("/teste/valida")
