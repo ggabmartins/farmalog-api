@@ -9,7 +9,7 @@ independentes.
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
 
-> ⚠️ **Projeto em desenvolvimento ativo.** As fases 1 a 3 estão concluídas. As
+> ⚠️ **Projeto em desenvolvimento ativo.** As fases 1 a 4 estão concluídas. As
 > demais estão descritas no roadmap abaixo. A modelagem é uma simplificação
 > inspirada na operação real de uma farmácia e não implementa conformidade
 > regulatória.
@@ -181,7 +181,7 @@ liberação por farmacêutico.
       Entrada de lote, movimentação como registro imutável, cálculo de
       disponibilidade ignorando vencidos, alertas de validade e estoque mínimo.
 
-- [ ] **Fase 4 — Vendas**
+- [x] **Fase 4 — Vendas**
       Fluxo de venda com baixa FEFO, atomicidade, regra de receita, cancelamento
       com estorno nos lotes de origem e controle de concorrência.
 

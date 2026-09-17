@@ -54,3 +54,23 @@ Registro das entregas por fase. Cada fase corresponde a uma tag e a um merge em
 - `ProdutoResponse` expõe `quantidadeEmEstoque` e a listagem aceita
   `?abaixoDoMinimo=true`; lotes vencidos não entram na disponibilidade (RN-02).
 - Cobertura de testes das regras de estoque (RN-02, RN-04, RN-10).
+
+## [fase-4] — 17-09-2026
+
+### Vendas
+
+- Entidades `Venda`, `ItemVenda` e `Receita` (migration V4); `ItemVenda` e
+  `Receita` são `@Immutable`, mesmo padrão da `MovimentacaoEstoque`.
+- `POST /vendas`: baixa de estoque por FEFO, do lote que vence primeiro pro
+  que vence por último (RN-01), numa única transação — item sem estoque
+  desfaz a venda inteira (RN-03).
+- Preço e subtotal do item congelados no momento da venda (RN-07).
+- Produto não-isento exige receita e farmacêutico responsável; perfil sem
+  permissão recebe 403, receita ausente recebe 422 (RN-05).
+- `POST /vendas/{id}/cancelamento`: estorna cada movimentação de saída no
+  lote exato de onde ela saiu (RN-06).
+- Conflito de concorrência no estoque (`@Version` no `Lote`) passa a
+  responder 409 Conflict (RN-08).
+- `GET /vendas` (paginado, filtro por período) e `GET /vendas/{id}`; atendente
+  vê só as próprias vendas.
+- Cobertura de testes das regras RN-01, RN-03, RN-05, RN-06 e RN-08.
