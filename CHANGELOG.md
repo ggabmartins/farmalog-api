@@ -74,3 +74,22 @@ Registro das entregas por fase. Cada fase corresponde a uma tag e a um merge em
 - `GET /vendas` (paginado, filtro por período) e `GET /vendas/{id}`; atendente
   vê só as próprias vendas.
 - Cobertura de testes das regras RN-01, RN-03, RN-05, RN-06 e RN-08.
+
+## [fase-5] — 02-10-2026
+
+### Relatórios
+
+- `GET /relatorios/vendas?inicio=&fim=` (somente `GERENTE`): total de vendas,
+  faturamento e ticket médio do período, mais a quantidade e o valor das vendas
+  canceladas, que ficam fora do faturamento.
+- `GET /relatorios/produtos-mais-vendidos?limite=` (somente `GERENTE`): ranking por
+  quantidade vendida, ignorando vendas canceladas; limite padrão 10 e máximo 20.
+- Agregação feita no banco (`GROUP BY`), sem carregar as vendas em memória.
+
+### Testes
+
+- Fecha as lacunas de integração: saldo do lote igual à soma das movimentações
+  (RN-04), preço congelado (RN-07), conflito de versão do lote (RN-08) e alertas
+  de lotes vencendo (RN-09).
+- Cobertura dos relatórios: unitários da conta (ticket médio, arredondamento,
+  período) e de integração (permissão, cancelada fora do ranking, teto do limite).

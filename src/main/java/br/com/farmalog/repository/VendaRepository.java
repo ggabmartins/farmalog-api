@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.util.List;
 
 public interface VendaRepository extends JpaRepository<Venda, Long> {
 
@@ -27,4 +28,12 @@ public interface VendaRepository extends JpaRepository<Venda, Long> {
 			@Param("inicio") Instant inicio,
 			@Param("fim") Instant fim,
 			Pageable pageable);
+
+	@Query("""
+			SELECT v.status, COUNT(v), SUM(v.valorTotal) FROM Venda v
+			WHERE (CAST(:inicio AS timestamp) IS NULL OR v.dataHora >= :inicio)
+			  AND (CAST(:fim AS timestamp) IS NULL OR v.dataHora < :fim)
+			GROUP BY v.status
+			""")
+	List<Object[]> resumirPorStatus(@Param("inicio") Instant inicio, @Param("fim") Instant fim);
 }

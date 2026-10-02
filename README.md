@@ -9,7 +9,7 @@ independentes.
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
 
-> ⚠️ **Projeto em desenvolvimento ativo.** As fases 1 a 4 estão concluídas. As
+> ⚠️ **Projeto em desenvolvimento ativo.** As fases 1 a 5 estão concluídas. As
 > demais estão descritas no roadmap abaixo. A modelagem é uma simplificação
 > inspirada na operação real de uma farmácia e não implementa conformidade
 > regulatória.
@@ -185,7 +185,7 @@ liberação por farmacêutico.
       Fluxo de venda com baixa FEFO, atomicidade, regra de receita, cancelamento
       com estorno nos lotes de origem e controle de concorrência.
 
-- [ ] **Fase 5 — Acabamento**
+- [x] **Fase 5 — Acabamento**
       Relatórios e cobertura de testes de integração das regras de negócio.
 
 - [ ] **Fase 6 — Entrega**
