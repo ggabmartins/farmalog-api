@@ -201,4 +201,32 @@ class VendaIntegrationTest {
 		mockMvc.perform(get("/api/v1/vendas").with(atendente()))
 				.andExpect(jsonPath("$.content").isEmpty());
 	}
+
+	@Test
+	void precoDoItem_ficaCongeladoQuandoOProdutoMudaDePreco() throws Exception {
+		Produto produto = produtoIsento();
+		lote(produto, "P1", LocalDate.now().plusMonths(6), 10);
+
+		String corpo = """
+				{ "itens": [ { "produtoId": %d, "quantidade": 2 } ] }
+				""".formatted(produto.getId());
+
+		String resposta = mockMvc.perform(post("/api/v1/vendas").with(atendente())
+						.contentType(MediaType.APPLICATION_JSON).content(corpo))
+				.andExpect(status().isCreated())
+				.andReturn().getResponse().getContentAsString();
+		Long vendaId = objectMapper.readTree(resposta).get("id").asLong();
+
+		produto.setPrecoVenda(new BigDecimal("15.00"));
+		produtoRepository.save(produto);
+
+		mockMvc.perform(get("/api/v1/vendas/" + vendaId).with(atendente()))
+				.andExpect(jsonPath("$.valorTotal").value(20.00))
+				.andExpect(jsonPath("$.itens[0].precoUnitario").value(10.00))
+				.andExpect(jsonPath("$.itens[0].subtotal").value(20.00));
+
+		mockMvc.perform(post("/api/v1/vendas").with(atendente())
+						.contentType(MediaType.APPLICATION_JSON).content(corpo))
+				.andExpect(jsonPath("$.valorTotal").value(30.00));
+	}
 }
