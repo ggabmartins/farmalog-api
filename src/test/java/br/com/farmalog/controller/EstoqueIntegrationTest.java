@@ -3,13 +3,21 @@ package br.com.farmalog.controller;
 import br.com.farmalog.entity.ExigenciaReceita;
 import br.com.farmalog.entity.Lote;
 import br.com.farmalog.entity.Produto;
+import br.com.farmalog.entity.TipoMovimentacao;
+import br.com.farmalog.entity.Usuario;
 import br.com.farmalog.repository.LoteRepository;
+import br.com.farmalog.repository.MovimentacaoEstoqueRepository;
 import br.com.farmalog.repository.ProdutoRepository;
+import br.com.farmalog.repository.UsuarioRepository;
+import br.com.farmalog.service.EstoqueService;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -19,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -39,6 +49,18 @@ class EstoqueIntegrationTest {
 
 	@Autowired
 	LoteRepository loteRepository;
+
+	@Autowired
+	MovimentacaoEstoqueRepository movimentacaoRepository;
+
+	@Autowired
+	UsuarioRepository usuarioRepository;
+
+	@Autowired
+	EstoqueService estoqueService;
+
+	@Autowired
+	EntityManager entityManager;
 
 	private static RequestPostProcessor farmaceutico() {
 		return jwt().jwt(j -> j.subject("farmaceutico@farmalog.dev"))
@@ -145,5 +167,56 @@ class EstoqueIntegrationTest {
 						.content("{ \"quantidade\": 50, \"observacao\": \"vencido, descartado conforme RDC 44/2009\" }"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.quantidadeAtual").value(0));
+	}
+
+	@Test
+	void saldoDoLote_eIgualASomaDasMovimentacoes() {
+		Usuario usuario = usuarioRepository.findByEmail("farmaceutico@farmalog.dev").orElseThrow();
+		Lote lote = lote(produto(10), "LEDGER", LocalDate.now().plusMonths(6), 0);
+
+		estoqueService.registrar(lote, TipoMovimentacao.ENTRADA, 100, usuario, null);
+		estoqueService.registrar(lote, TipoMovimentacao.SAIDA_VENDA, 30, usuario, null);
+		estoqueService.registrar(lote, TipoMovimentacao.ESTORNO, 10, usuario, null);
+		estoqueService.registrar(lote, TipoMovimentacao.DESCARTE, 20, usuario, "teste de ledger");
+
+		int somaDoHistorico = movimentacaoRepository
+				.buscar(null, lote.getId(), null, null, Pageable.unpaged()).getContent().stream()
+				.mapToInt(m -> aumentaSaldo(m.getTipo()) ? m.getQuantidade() : -m.getQuantidade())
+				.sum();
+
+		assertThat(lote.getQuantidadeAtual()).isEqualTo(60).isEqualTo(somaDoHistorico);
+	}
+
+	@Test
+	void alertas_listaLotesVencendoDentroDoPrazo_eIgnoraOsDemais() throws Exception {
+		Produto produto = produto(1);
+		lote(produto, "PERTO", LocalDate.now().plusDays(10), 5);
+		lote(produto, "LONGE", LocalDate.now().plusDays(90), 5);
+		lote(produto, "VENCIDO", LocalDate.now().minusDays(1), 5);
+
+		mockMvc.perform(get("/api/v1/estoque/alertas").param("dias", "30").with(atendente()))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.lotesVencendo[?(@.codigo == 'PERTO')].diasParaVencer").value(10))
+				.andExpect(jsonPath("$.lotesVencendo[?(@.codigo == 'LONGE')]").isEmpty())
+				.andExpect(jsonPath("$.lotesVencendo[?(@.codigo == 'VENCIDO')]").isEmpty());
+	}
+
+	@Test
+	void lote_alteradoPorOutraTransacao_lancaConflitoDeVersao() {
+		Lote lote = lote(produto(10), "CONC", LocalDate.now().plusMonths(6), 1);
+		entityManager.flush();
+
+		entityManager.createNativeQuery("UPDATE lote SET quantidade_atual = 0, version = version + 1 WHERE id = :id")
+				.setParameter("id", lote.getId())
+				.executeUpdate();
+
+		lote.setQuantidadeAtual(0);
+
+		assertThatThrownBy(() -> loteRepository.saveAndFlush(lote))
+				.isInstanceOf(ObjectOptimisticLockingFailureException.class);
+	}
+
+	private static boolean aumentaSaldo(TipoMovimentacao tipo) {
+		return tipo == TipoMovimentacao.ENTRADA || tipo == TipoMovimentacao.ESTORNO;
 	}
 }
