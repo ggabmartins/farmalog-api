@@ -1,5 +1,6 @@
 package br.com.farmalog.controller;
 
+import br.com.farmalog.dto.ProdutoMaisVendidoResponse;
 import br.com.farmalog.dto.RelatorioVendasResponse;
 import br.com.farmalog.dto.VendaFiltro;
 import br.com.farmalog.service.RelatorioService;
@@ -11,7 +12,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/relatorios")
@@ -30,5 +34,15 @@ public class RelatorioController {
 	})
 	public RelatorioVendasResponse vendas(VendaFiltro filtro) {
 		return service.vendas(filtro);
+	}
+
+	@GetMapping("/produtos-mais-vendidos")
+	@Operation(summary = "Ranking de produtos por quantidade vendida, ignorando vendas canceladas (limite padrão 10, máximo 20)")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "Ranking, do mais vendido para o menos"),
+			@ApiResponse(responseCode = "403", description = "Perfil sem permissão")
+	})
+	public List<ProdutoMaisVendidoResponse> produtosMaisVendidos(@RequestParam(required = false) Integer limite) {
+		return service.maisVendidos(limite);
 	}
 }

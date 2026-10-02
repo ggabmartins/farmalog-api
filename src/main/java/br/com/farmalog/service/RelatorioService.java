@@ -1,10 +1,13 @@
 package br.com.farmalog.service;
 
+import br.com.farmalog.dto.ProdutoMaisVendidoResponse;
 import br.com.farmalog.dto.RelatorioVendasResponse;
 import br.com.farmalog.dto.VendaFiltro;
 import br.com.farmalog.entity.StatusVenda;
+import br.com.farmalog.repository.ItemVendaRepository;
 import br.com.farmalog.repository.VendaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +16,7 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +25,11 @@ public class RelatorioService {
 
 	private static final BigDecimal ZERO_REAIS = BigDecimal.ZERO.setScale(2);
 
+	private static final int LIMITE_PADRAO = 10;
+	private static final int LIMITE_MAXIMO = 20;
+
 	private final VendaRepository vendaRepository;
+	private final ItemVendaRepository itemVendaRepository;
 
 	public RelatorioVendasResponse vendas(VendaFiltro filtro) {
 		Instant inicio = aInstante(filtro.inicio());
@@ -51,6 +59,14 @@ public class RelatorioService {
 				: faturamento.divide(BigDecimal.valueOf(totalVendas), 2, RoundingMode.HALF_UP);
 
 		return new RelatorioVendasResponse(totalVendas, faturamento, ticketMedio, totalCanceladas, valorCancelado);
+	}
+
+	public List<ProdutoMaisVendidoResponse> maisVendidos(Integer limite) {
+		int efetivo = limite == null ? LIMITE_PADRAO : Math.max(1, Math.min(limite, LIMITE_MAXIMO));
+
+		return itemVendaRepository.maisVendidos(PageRequest.of(0, efetivo)).stream()
+				.map(linha -> new ProdutoMaisVendidoResponse((Long) linha[0], (String) linha[1], (Long) linha[2]))
+				.toList();
 	}
 
 	private static Instant aInstante(LocalDate data) {
